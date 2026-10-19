@@ -27,6 +27,8 @@ class AppConfig {
   // Header wajib untuk menembus proteksi LocalTunnel / ngrok
   static Map<String, String> get headers => {
         'bypass-tunnel-reminder': 'true',
+        'ngrok-skip-browser-warning': 'true',
+        'Content-Type': 'application/json',
         'Accept': 'application/json',
       };
 }
