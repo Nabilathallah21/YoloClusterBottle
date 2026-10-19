@@ -9,14 +9,17 @@ import 'scanned_stock_screen.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  // Inisialisasi konfigurasi URL dinamis
-  await AppConfig.init();
+  try {
+    await AppConfig.init();
+  } catch (e) {
+    debugPrint("Gagal muat config: $e");
+  }
   
   List<CameraDescription> cameras = [];
   try {
     cameras = await availableCameras();
   } catch (e) {
-    debugPrint("Kamera tidak ditemukan atau izin ditolak: $e");
+    debugPrint("Kamera tidak ditemukan/izin ditolak: $e");
   }
   
   runApp(MyApp(cameras: cameras));
@@ -32,10 +35,8 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'YOLO Inventory App',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.indigo,
-          brightness: Brightness.light,
-        ),
+        primarySwatch: Colors.indigo,
+        scaffoldBackgroundColor: Colors.grey.shade100,
         useMaterial3: true,
       ),
       home: LoginScreen(cameras: cameras),
