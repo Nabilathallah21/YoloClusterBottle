@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'config.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -8,26 +9,35 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  final TextEditingController _serverUrlController = TextEditingController(
-    text: 'http://10.21.13.96:8000',
-  );
-  
+  late TextEditingController _serverUrlController;
   bool _isSaving = false;
 
-  void _saveSettings() {
+  @override
+  void initState() {
+    super.initState();
+    _serverUrlController = TextEditingController(text: AppConfig.baseUrl);
+  }
+
+  @override
+  void dispose() {
+    _serverUrlController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _saveSettings() async {
     setState(() => _isSaving = true);
-    
-    Future.delayed(const Duration(seconds: 1), () {
-      setState(() => _isSaving = false);
-      if (!mounted) return;
-      
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Konfigurasi server & MongoDB berhasil disimpan!"),
-          backgroundColor: Colors.green,
-        ),
-      );
-    });
+
+    await AppConfig.setBaseUrl(_serverUrlController.text);
+
+    if (!mounted) return;
+    setState(() => _isSaving = false);
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text("URL Server disimpan: ${AppConfig.baseUrl}"),
+        backgroundColor: Colors.green,
+      ),
+    );
   }
 
   @override
@@ -63,7 +73,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                     const SizedBox(height: 4),
                     const Text(
-                      "FastAPI bertindak sebagai jembatan ke database MongoDB.",
+                      "Masukkan URL HTTPS LocalTunnel/Ngrok aktif (misal: https://xxx.loca.lt)",
                       style: TextStyle(color: Colors.grey, fontSize: 12),
                     ),
                     const SizedBox(height: 12),
@@ -80,9 +90,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ),
             const SizedBox(height: 20),
-
             const Text(
-              "Database Status",
+              "Status Sistem",
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.indigo),
             ),
             const SizedBox(height: 8),
@@ -94,7 +103,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ListTile(
                     leading: Icon(Icons.storage, color: Colors.green),
                     title: Text("MongoDB Atlas / Local"),
-                    subtitle: Text("Koleksi: inventory_items"),
+                    subtitle: Text("Koleksi: yolo_counter_db"),
                     trailing: Chip(
                       label: Text("Terhubung", style: TextStyle(color: Colors.green, fontSize: 12)),
                       backgroundColor: Color(0xFFE8F5E9),
@@ -103,34 +112,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ],
               ),
             ),
-            const SizedBox(height: 20),
-
-            const Text(
-              "Informasi",
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.indigo),
-            ),
-            const SizedBox(height: 8),
-            Card(
-              elevation: 2,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              child: Column(
-                children: [
-                  const ListTile(
-                    leading: Icon(Icons.info_outline, color: Colors.indigo),
-                    title: Text("Versi Aplikasi"),
-                    trailing: Text("1.0.0 (YOLO + MongoDB)", style: TextStyle(color: Colors.grey)),
-                  ),
-                  const Divider(height: 1),
-                  ListTile(
-                    leading: const Icon(Icons.person_outline, color: Colors.indigo),
-                    title: const Text("Operator Aktif"),
-                    trailing: Text("Operator AI", style: TextStyle(color: Colors.grey.shade700)),
-                  ),
-                ],
-              ),
-            ),
             const SizedBox(height: 32),
-
             SizedBox(
               width: double.infinity,
               height: 48,

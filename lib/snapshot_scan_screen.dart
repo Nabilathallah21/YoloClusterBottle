@@ -1,9 +1,9 @@
-import 'dart:io';
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:http/http.dart' as http;
+import 'config.dart';
 
 class SnapshotScanScreen extends StatefulWidget {
   final List<CameraDescription> cameras;
@@ -19,10 +19,11 @@ class _SnapshotScanScreenState extends State<SnapshotScanScreen> {
   bool _isCameraInitialized = false;
   bool _isScanning = false;
   XFile? _capturedImage;
-  Uint8List? _processedImageBytes; // Byte gambar hasil bounding box YOLO
-  
+  Uint8List? _processedImageBytes;
+
   List<dynamic> _detectedItems = [];
-  String _shiftInfoText = "Arahkan kamera ke objek, lalu tekan tombol untuk mengambil foto.";
+  String _shiftInfoText =
+      "Arahkan kamera ke objek, lalu tekan tombol untuk mengambil foto.";
 
   @override
   void initState() {
@@ -71,20 +72,29 @@ class _SnapshotScanScreenState extends State<SnapshotScanScreen> {
 
     try {
       XFile imageFile = await _controller!.takePicture();
+      Uint8List imageBytes = await imageFile.readAsBytes();
+
       setState(() {
         _capturedImage = imageFile;
       });
 
       var request = http.MultipartRequest(
         'POST',
-        Uri.parse('http://10.21.13.96:8000/predict'),
+        Uri.parse('${AppConfig.baseUrl}/predict'),
       );
+
+      request.headers.addAll(AppConfig.headers);
 
       request.files.add(
-        await http.MultipartFile.fromPath('file', imageFile.path),
+        http.MultipartFile.fromBytes(
+          'file',
+          imageBytes,
+          filename: 'snapshot.jpg',
+        ),
       );
 
-      var streamedResponse = await request.send().timeout(const Duration(seconds: 10));
+      var streamedResponse =
+          await request.send().timeout(const Duration(seconds: 10));
       var responseBody = await streamedResponse.stream.bytesToString();
 
       if (!mounted) return;
@@ -92,7 +102,7 @@ class _SnapshotScanScreenState extends State<SnapshotScanScreen> {
       if (streamedResponse.statusCode == 200) {
         var data = jsonDecode(responseBody);
         String shiftName = data['shift_name'] ?? '-';
-        int totalDetected = data['total_detected'] ?? 0;
+        int totalDetected = data['total_detected'] ?? data['total_in_screen'] ?? 0;
         var detections = data['detections'] as List<dynamic>? ?? [];
 
         Uint8List? decodedBytes;
@@ -104,7 +114,7 @@ class _SnapshotScanScreenState extends State<SnapshotScanScreen> {
           _processedImageBytes = decodedBytes;
           _detectedItems = detections;
           if (detections.isEmpty) {
-            _shiftInfoText = "Shift: $shiftName | Tidak ada objek valid (di atas 70%) terdeteksi.";
+            _shiftInfoText = "Shift: $shiftName | Tidak ada objek valid terdeteksi.";
           } else {
             _shiftInfoText = "Shift: $shiftName | Total Terdeteksi: $totalDetected objek";
           }
@@ -117,7 +127,7 @@ class _SnapshotScanScreenState extends State<SnapshotScanScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _shiftInfoText = "Gagal terhubung ke API: Pastikan laptop & Wi-Fi aktif ($e)";
+        _shiftInfoText = "Gagal terhubung ke API: Cek koneksi server ($e)";
       });
     } finally {
       if (mounted) {
@@ -157,10 +167,9 @@ class _SnapshotScanScreenState extends State<SnapshotScanScreen> {
                         ? CameraPreview(_controller!)
                         : (_processedImageBytes != null
                             ? Image.memory(_processedImageBytes!, fit: BoxFit.contain)
-                            : Image.file(File(_capturedImage!.path), fit: BoxFit.cover)),
+                            : Image.memory(_processedImageBytes!, fit: BoxFit.cover)),
                   ),
                 ),
-                
                 Expanded(
                   flex: 2,
                   child: Padding(
@@ -195,7 +204,7 @@ class _SnapshotScanScreenState extends State<SnapshotScanScreen> {
                                           itemBuilder: (context, index) {
                                             final item = _detectedItems[index];
                                             final name = item['nama_barang'] ?? item['class_name'] ?? 'Objek';
-                                            final confidenceStr = item['persen_kepercayaan'] ?? 
+                                            final confidenceStr = item['persen_kepercayaan'] ??
                                                 "${((item['confidence'] ?? 0.0) * 100).toStringAsFixed(1)}%";
 
                                             return Padding(
@@ -241,7 +250,6 @@ class _SnapshotScanScreenState extends State<SnapshotScanScreen> {
                           ),
                         ),
                         const SizedBox(height: 16),
-                        
                         _capturedImage == null
                             ? ElevatedButton.icon(
                                 onPressed: _isScanning ? null : _captureAndScan,

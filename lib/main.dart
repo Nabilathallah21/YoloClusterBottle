@@ -1,11 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
+import 'config.dart';
 import 'live_scan_screen.dart';
 import 'snapshot_scan_screen.dart';
 import 'settings_screen.dart';
 import 'scanned_stock_screen.dart';
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // Inisialisasi konfigurasi URL dinamis
+  await AppConfig.init();
+  
   final cameras = await availableCameras();
   runApp(MyApp(cameras: cameras));
 }
@@ -30,6 +36,7 @@ class MyApp extends StatelessWidget {
     );
   }
 }
+
 // ================= 1. HALAMAN LOGIN =================
 class LoginScreen extends StatefulWidget {
   final List<CameraDescription> cameras;
@@ -210,7 +217,6 @@ class MainMenuScreen extends StatelessWidget {
             Expanded(
               child: ListView(
                 children: [
-                  // Menu 1: Pindai Barang Live
                   _buildMenuCard(
                     context,
                     title: "Pindai Barang Live",
@@ -225,8 +231,6 @@ class MainMenuScreen extends StatelessWidget {
                     },
                   ),
                   const SizedBox(height: 12),
-
-                  // Menu 2: Pindai Foto (Snapshot Manual)
                   _buildMenuCard(
                     context,
                     title: "Pindai Foto",
@@ -241,8 +245,6 @@ class MainMenuScreen extends StatelessWidget {
                     },
                   ),
                   const SizedBox(height: 12),
-
-                  // Menu 3: Stok Barang yang Dipindai
                   _buildMenuCard(
                     context,
                     title: "Stok Barang Dipindai",
@@ -253,11 +255,12 @@ class MainMenuScreen extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                        builder: (context) => const ScannedStockScreen(),
+                          builder: (context) => const ScannedStockScreen(),
                         ),
                       );
                     },
                   ),
+                  const SizedBox(height: 12),
                   _buildMenuCard(
                     context,
                     title: "Pengaturan Sistem",
@@ -267,7 +270,7 @@ class MainMenuScreen extends StatelessWidget {
                     onTap: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => SettingsScreen()),
+                        MaterialPageRoute(builder: (context) => const SettingsScreen()),
                       );
                     },
                   ),

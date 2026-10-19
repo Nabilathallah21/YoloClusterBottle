@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'config.dart';
 
 class ScannedStockScreen extends StatefulWidget {
   const ScannedStockScreen({super.key});
@@ -10,8 +11,6 @@ class ScannedStockScreen extends StatefulWidget {
 }
 
 class _ScannedStockScreenState extends State<ScannedStockScreen> {
-  static const String _baseUrl = 'http://10.21.13.96:8000';
-
   bool _isLoading = true;
   List<dynamic> _mongoStockItems = [];
   List<dynamic> _shiftSummaries = [];
@@ -32,11 +31,13 @@ class _ScannedStockScreenState extends State<ScannedStockScreen> {
 
     try {
       final stockResponse = await http.get(
-        Uri.parse('$_baseUrl/inventory'),
+        Uri.parse('${AppConfig.baseUrl}/inventory'),
+        headers: AppConfig.headers,
       ).timeout(const Duration(seconds: 5));
 
       final summaryResponse = await http.get(
-        Uri.parse('$_baseUrl/api/v1/shift-summary/today'),
+        Uri.parse('${AppConfig.baseUrl}/api/v1/shift-summary/today'),
+        headers: AppConfig.headers,
       ).timeout(const Duration(seconds: 5));
 
       if (stockResponse.statusCode == 200) {
@@ -298,7 +299,7 @@ class _ScannedStockScreenState extends State<ScannedStockScreen> {
                                 ),
                                 subtitle: Padding(
                                   padding: const EdgeInsets.only(top: 4),
-                                  child: Text("Update: ${item["updated_at"] ?? "Baru saja"}", style: TextStyle(color: Colors.grey.shade600, fontSize: 13)),
+                                  child: Text("Quantity: ${item["quantity"] ?? 0} Pcs", style: TextStyle(color: Colors.grey.shade600, fontSize: 13)),
                                 ),
                                 trailing: Text(
                                   "${item["quantity"] ?? 0} Pcs",

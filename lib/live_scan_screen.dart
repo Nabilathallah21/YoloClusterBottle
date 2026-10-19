@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'config.dart';
 
 class LiveScanScreen extends StatefulWidget {
   final List<CameraDescription> cameras;
@@ -16,7 +17,7 @@ class _LiveScanScreenState extends State<LiveScanScreen> {
   CameraController? _controller;
   bool _isCameraInitialized = false;
   bool _isScanning = false;
-  bool _isLoopActive = true; // Kontrol loop pindaian otomatis
+  bool _isLoopActive = true;
   bool _isPanelExpanded = false;
 
   Uint8List? _processedImageBytes;
@@ -44,7 +45,6 @@ class _LiveScanScreenState extends State<LiveScanScreen> {
           _scanStatusMessage = "Deteksi otomatis berjalan...";
         });
 
-        // Jalankan loop pemindaian otomatis
         _startAutoScanLoop();
       } else {
         setState(() {
@@ -58,7 +58,6 @@ class _LiveScanScreenState extends State<LiveScanScreen> {
     }
   }
 
-  // Loop pemindaian otomatis secara terus-menerus
   Future<void> _startAutoScanLoop() async {
     while (_isLoopActive && mounted) {
       if (_controller != null &&
@@ -66,13 +65,13 @@ class _LiveScanScreenState extends State<LiveScanScreen> {
           !_isScanning) {
         await _captureAndScan();
       }
-      await Future.delayed(const Duration(milliseconds: 300));
+      await Future.delayed(const Duration(milliseconds: 400));
     }
   }
 
   @override
   void dispose() {
-    _isLoopActive = false; // Matikan loop saat keluar halaman
+    _isLoopActive = false;
     _controller?.dispose();
     super.dispose();
   }
@@ -84,14 +83,21 @@ class _LiveScanScreenState extends State<LiveScanScreen> {
 
     try {
       XFile imageFile = await _controller!.takePicture();
+      Uint8List imageBytes = await imageFile.readAsBytes();
 
       var request = http.MultipartRequest(
         'POST',
-        Uri.parse('http://10.21.13.96:8000/predict'), // Sesuaikan IP server
+        Uri.parse('${AppConfig.baseUrl}/predict'),
       );
 
+      request.headers.addAll(AppConfig.headers);
+
       request.files.add(
-        await http.MultipartFile.fromPath('file', imageFile.path),
+        http.MultipartFile.fromBytes(
+          'file',
+          imageBytes,
+          filename: 'live_frame.jpg',
+        ),
       );
 
       var streamedResponse =
