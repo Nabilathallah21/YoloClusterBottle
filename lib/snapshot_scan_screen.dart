@@ -47,6 +47,7 @@ class _SnapshotScanScreenState extends State<SnapshotScanScreen> {
         _isCameraInitialized = true;
       });
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _shiftInfoText = "Gagal menginisialisasi kamera: $e";
       });
@@ -74,6 +75,7 @@ class _SnapshotScanScreenState extends State<SnapshotScanScreen> {
       XFile imageFile = await _controller!.takePicture();
       Uint8List imageBytes = await imageFile.readAsBytes();
 
+      if (!mounted) return;
       setState(() {
         _capturedImage = imageFile;
       });
@@ -167,7 +169,7 @@ class _SnapshotScanScreenState extends State<SnapshotScanScreen> {
                         ? CameraPreview(_controller!)
                         : (_processedImageBytes != null
                             ? Image.memory(_processedImageBytes!, fit: BoxFit.contain)
-                            : Image.memory(_processedImageBytes!, fit: BoxFit.cover)),
+                            : Image.network(_capturedImage!.path, fit: BoxFit.cover)),
                   ),
                 ),
                 Expanded(

@@ -12,7 +12,13 @@ Future<void> main() async {
   // Inisialisasi konfigurasi URL dinamis
   await AppConfig.init();
   
-  final cameras = await availableCameras();
+  List<CameraDescription> cameras = [];
+  try {
+    cameras = await availableCameras();
+  } catch (e) {
+    debugPrint("Kamera tidak ditemukan atau izin ditolak: $e");
+  }
+  
   runApp(MyApp(cameras: cameras));
 }
 
@@ -55,13 +61,20 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _isLoading = true);
     
     Future.delayed(const Duration(seconds: 1), () {
-      setState(() => _isLoading = false);
       if (!mounted) return;
+      setState(() => _isLoading = false);
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => MainMenuScreen(cameras: widget.cameras)),
       );
     });
+  }
+
+  @override
+  void dispose() {
+    _usernameController.dispose();
+    _passwordController.dispose();
+    super.dispose();
   }
 
   @override

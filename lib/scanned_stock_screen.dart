@@ -40,6 +40,8 @@ class _ScannedStockScreenState extends State<ScannedStockScreen> {
         headers: AppConfig.headers,
       ).timeout(const Duration(seconds: 5));
 
+      if (!mounted) return;
+
       if (stockResponse.statusCode == 200) {
         final stockData = jsonDecode(stockResponse.body);
         setState(() {
@@ -60,6 +62,7 @@ class _ScannedStockScreenState extends State<ScannedStockScreen> {
         });
       }
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _mongoStockItems = [];
         _shiftSummaries = [];
@@ -67,9 +70,11 @@ class _ScannedStockScreenState extends State<ScannedStockScreen> {
         _errorMessage = "Gagal terhubung ke server FastAPI.";
       });
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 

@@ -47,11 +47,13 @@ class _LiveScanScreenState extends State<LiveScanScreen> {
 
         _startAutoScanLoop();
       } else {
+        if (!mounted) return;
         setState(() {
           _scanStatusMessage = "Tidak ada kamera yang tersedia pada perangkat.";
         });
       }
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _scanStatusMessage = "Gagal menginisialisasi kamera: $e";
       });
@@ -134,7 +136,9 @@ class _LiveScanScreenState extends State<LiveScanScreen> {
         _scanStatusMessage = "Koneksi terputus: Cek server...";
       });
     } finally {
-      _isScanning = false;
+      if (mounted) {
+        _isScanning = false;
+      }
     }
   }
 
