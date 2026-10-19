@@ -169,7 +169,7 @@ class _SnapshotScanScreenState extends State<SnapshotScanScreen> {
                         ? CameraPreview(_controller!)
                         : (_processedImageBytes != null
                             ? Image.memory(_processedImageBytes!, fit: BoxFit.contain)
-                            : Image.network(_capturedImage!.path, fit: BoxFit.cover)),
+                            : Container(color: Colors.black)),
                   ),
                 ),
                 Expanded(
@@ -206,8 +206,14 @@ class _SnapshotScanScreenState extends State<SnapshotScanScreen> {
                                           itemBuilder: (context, index) {
                                             final item = _detectedItems[index];
                                             final name = item['nama_barang'] ?? item['class_name'] ?? 'Objek';
+
+                                            double confValue = 0.0;
+                                            if (item['confidence'] != null) {
+                                              confValue = double.tryParse(item['confidence'].toString()) ?? 0.0;
+                                            }
+
                                             final confidenceStr = item['persen_kepercayaan'] ??
-                                                "${((item['confidence'] ?? 0.0) * 100).toStringAsFixed(1)}%";
+                                                "${(confValue * 100).toStringAsFixed(1)}%";
 
                                             return Padding(
                                               padding: const EdgeInsets.symmetric(vertical: 3.0),

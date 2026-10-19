@@ -260,9 +260,14 @@ class _LiveScanScreenState extends State<LiveScanScreen> {
                                         item['nama_barang'] ??
                                             item['class_name'] ??
                                             'Barang';
-                                    final String persenConf = item[
-                                            'persen_kepercayaan'] ??
-                                        "${((item['confidence'] ?? 0.0) * 100).toStringAsFixed(1)}%";
+
+                                    double confValue = 0.0;
+                                    if (item['confidence'] != null) {
+                                      confValue = double.tryParse(item['confidence'].toString()) ?? 0.0;
+                                    }
+
+                                    final String persenConf = item['persen_kepercayaan'] ??
+                                        "${(confValue * 100).toStringAsFixed(1)}%";
 
                                     return Padding(
                                       padding: const EdgeInsets.symmetric(
